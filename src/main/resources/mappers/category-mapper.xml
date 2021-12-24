@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="categoryMapper">
+
+	<!-- 선택 서브 카테고리 리스트 카운트 -->
+	<select id="selectListCategoryCount" resultType="_int">
+		SELECT COUNT(*) FROM BOOK WHERE BOOKSUBCATEGORY = #{category}
+	</select>
+	
+	<!-- 선택 서브 카테고리 및 선택 조건에 따른 정렬 리스트(판매량순 정렬제외) -->
+	<select id="selectListCategory" parameterType="list"
+		resultType="Book">
+		SELECT * FROM BOOK WHERE BOOKSUBCATEGORY = #{list[0]}
+		<choose>
+			<when test="list[1]==1">
+				ORDER BY BOOKPUBLISHEDATE DESC, BOOKISBN
+			</when>
+			<when test="list[1]==3">
+				ORDER BY BOOKTITLE, BOOKISBN
+			</when>
+			<when test="list[1]==4">
+				ORDER BY BOOKRATING DESC,BOOKISBN
+			</when>
+			<when test="list[1]==5">
+				ORDER BY BOOKPRICE DESC,BOOKISBN
+			</when>
+			<otherwise>
+				ORDER BY BOOKPRICE,BOOKISBN
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 선택 서브 카테고리 및 판매량순 정렬 리스트 -->
+	<select id="selectListCategoryBest" resultType="Book">
+		SELECT * FROM(
+		SELECT B.*,NVL(SELLSUM,0) SELL FROM BOOK B LEFT JOIN (
+		SELECT BOOKISBN,SUM(SELLQUNTITY) SELLSUM FROM SELLDATE WHERE SELLDATE >
+		SYSDATE-8 GROUP BY BOOKISBN) S ON B.BOOKISBN=S.BOOKISBN
+		WHERE BOOKSUBCATEGORY = #{category}
+		ORDER BY SELL DESC, B.BOOKRATING DESC,B.BOOKRATINGCOUNT)
+	</select>
+
+	<!-- 선택 메인카테고리 리스트 카운트 -->
+	<select id="selectListMainCategoryCount" resultType="_int">
+		SELECT COUNT(*) FROM BOOK WHERE BOOKCATEGORY = #{mainCategory}
+	</select>
+	
+	<!-- 선택 메인 카테고리 및 선택 조건에 따른 정렬 리스트(판매량순 정렬제외) -->
+	<select id="selectListMainCategory" parameterType="list"
+		resultType="Book">
+		SELECT * FROM BOOK WHERE BOOKCATEGORY = #{list[0]}
+		<choose>
+			<when test="list[1]==1">
+				ORDER BY BOOKPUBLISHEDATE DESC, BOOKISBN
+			</when>
+			<when test="list[1]==3">
+				ORDER BY BOOKTITLE, BOOKISBN
+			</when>
+			<when test="list[1]==4">
+				ORDER BY BOOKRATING DESC,BOOKISBN
+			</when>
+			<when test="list[1]==5">
+				ORDER BY BOOKPRICE DESC,BOOKISBN
+			</when>
+			<otherwise>
+				ORDER BY BOOKPRICE,BOOKISBN
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 선택 메인 카테고리 및 판매량순 정렬 리스트 -->
+	<select id="selectListMainCategoryBest" resultType="Book">
+		SELECT * FROM(
+		SELECT B.*,NVL(SELLSUM,0) SELL FROM BOOK B LEFT JOIN (
+		SELECT BOOKISBN,SUM(SELLQUNTITY) SELLSUM FROM SELLDATE WHERE SELLDATE >
+		SYSDATE-8 GROUP BY BOOKISBN) S ON B.BOOKISBN=S.BOOKISBN
+		WHERE BOOKCATEGORY = #{mainCategory}
+		ORDER BY SELL DESC, B.BOOKRATING DESC,B.BOOKRATINGCOUNT)
+	</select>
+
+</mapper>

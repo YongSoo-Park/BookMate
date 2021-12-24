@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+
+   <settings>
+      <setting name="jdbcTypeForNull" value="NULL" />
+   </settings>
+
+   <typeAliases>
+	  <typeAlias type="com.kh.bookmate.main.model.vo.RecentView" alias="RecentView" />
+      <typeAlias type="com.kh.bookmate.book.model.vo.Book" alias="Book" />
+      <typeAlias type="com.kh.bookmate.club.model.vo.Club" alias="Club" />
+      <typeAlias type="com.kh.bookmate.club.model.vo.ClubAttachment" alias="ClubAttachment"/>
+      <typeAlias type="com.kh.bookmate.club.model.vo.ClubTime" alias="ClubTime"/>
+      <typeAlias type="com.kh.bookmate.club.model.vo.SearchCondition" alias="SearchCondition"/>
+      <typeAlias type="com.kh.bookmate.clubApply.model.vo.ClubApply" alias="ClubApply" />
+      <typeAlias type="com.kh.bookmate.clubApply.model.vo.ClubWish" alias="ClubWish" />
+      <typeAlias type="com.kh.bookmate.clubReview.model.vo.ClubReview" alias="ClubReview" />
+      <typeAlias type="com.kh.bookmate.clubReview.model.vo.ClubQna" alias="ClubQna" />
+      <typeAlias type="com.kh.bookmate.clubReview.model.vo.ClubQnaAnswer" alias="ClubQnaAnswer" />
+      <typeAlias type="com.kh.bookmate.user.model.vo.User" alias="myPage"/>
+      <typeAlias type="com.kh.bookmate.user.model.vo.User" alias="User"/>
+      <typeAlias type="com.kh.bookmate.seller.model.vo.Seller" alias="Seller"/>
+      <typeAlias type="com.kh.bookmate.ubook.model.vo.Ubook" alias="Ubook"/>
+      <typeAlias type="com.kh.bookmate.payment.model.vo.Payment" alias="Payment"/>
+      <typeAlias type="com.kh.bookmate.shoppingbasket.model.vo.ShoppingBasket" alias="ShoppingBasket"/>
+      <typeAlias type="com.kh.bookmate.payment.model.vo.PaymentDetail" alias="PaymentDetail"/>
+      <typeAlias type="com.kh.bookmate.addressBook.model.vo.AddressBook" alias="AddressBook"/>
+      <typeAlias type="com.kh.bookmate.coupon.model.vo.Coupon" alias="Coupon"/>
+      <typeAlias type="com.kh.bookmate.ubook.model.vo.Ubook_Qna" alias="Ubook_Qna"/>
+      <typeAlias type="com.kh.bookmate.paymentmethod.model.vo.PaymentMethodDetail" alias="PaymentMethodDetail"/>
+      <typeAlias type="com.kh.bookmate.paymentmethod.model.vo.PaymentMethod" alias="PaymentMethod"/>
+		<typeAlias type="com.kh.bookmate.exchange_item.model.vo.ExchangeItem" alias="ExchangeItem"/>
+		<typeAlias type="com.kh.bookmate.bookreview.model.vo.BookReview" alias="BookReview"/>
+		<typeAlias type="com.kh.bookmate.bookreview.model.vo.BookReviewReply" alias="BookReviewReply"/>
+		<typeAlias type="com.kh.bookmate.bookreview.model.vo.BuyReview" alias="BuyReview"/>
+      <typeAlias type="com.kh.bookmate.ubook_payment.model.vo.UbookPayment" alias="UbookPayment"/>
+      <typeAlias type="com.kh.bookmate.ubook_cart.model.vo.UbookCart" alias="UbookCart"/>
+      <typeAlias type="com.kh.bookmate.ubook_payment.model.vo.UbookPaymentDetail" alias="UbookPaymentDetail"/>
+      <typeAlias type="com.kh.bookmate.bookqna.model.vo.BookQna" alias="BookQna" />
+      <typeAlias type="com.kh.bookmate.bookqna.model.vo.BookQnaAnswer" alias="BookQnaAnswer" />
+      <typeAlias type="com.kh.bookmate.returnBook.model.vo.ReturnBook" alias="ReturnBook"/>
+      <typeAlias type="com.kh.bookmate.notice.model.vo.Notice" alias="Notice"/>
+      <typeAlias type="com.kh.bookmate.coupon.model.vo.UseCoupon" alias="UseCoupon"/>
+      <typeAlias type="com.kh.bookmate.admin.model.vo.AdminUser" alias="AdminUser"/>
+      <typeAlias type="com.kh.bookmate.wishlist.model.vo.WishList" alias="WishList"/>
+   
+   </typeAliases>
+  
+   <typeHandlers>
+      <typeHandler
+         handler="org.apache.ibatis.type.LocalDateTypeHandler" />
+   </typeHandlers>
+
+   <mappers>
+      <mapper resource="/mappers/basket-mapper.xml"/>
+      <mapper resource="/mappers/book-mapper.xml" />
+      <mapper resource="/mappers/club-mapper.xml" />
+      <mapper resource="/mappers/clubApply-mapper.xml" />
+      <mapper resource="/mappers/clubReview-mapper.xml" />
+      <mapper resource="/mappers/myPage-mapper.xml"/>
+      <mapper resource="/mappers/user-mapper.xml"/>
+      <mapper resource="/mappers/seller-mapper.xml"/>
+      <mapper resource="/mappers/ubook-mapper.xml"/>
+      <mapper resource="/mappers/payment-mapper.xml"/>
+      <mapper resource="/mappers/addressBook-mapper.xml"/>
+      <mapper resource="/mappers/coupon-mapper.xml"/>
+      <mapper resource="/mappers/paymentMethod-mapper.xml"/>
+		<mapper resource="/mappers/exchangeItem-mapper.xml"/>
+		<mapper resource="/mappers/review-mapper.xml"/>
+      <mapper resource="/mappers/ubookPayment-mapper.xml"/>
+      <mapper resource="/mappers/ubookCart-mapper.xml"/>
+      <mapper resource="/mappers/bookQna-mapper.xml"/>
+      <mapper resource="/mappers/returnBook-mapper.xml"/>
+      <mapper resource="/mappers/main-mapper.xml"/>
+      <mapper resource="/mappers/search-mapper.xml"/>
+      <mapper resource="/mappers/category-mapper.xml"/>
+      <mapper resource="/mappers/notice-mapper.xml"/>
+      <mapper resource="/mappers/useCoupon-mapper.xml"/>
+      <mapper resource="/mappers/admin-mapper.xml"/>
+      <mapper resource="/mappers/wishList-mapper.xml"/>
+   </mappers>
+
+
+
+
+</configuration>

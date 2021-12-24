@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bookMapper">
+
+
+	<!-- 도서 정보 불러오기 -->
+	<select id="selectBook" resultType="Book">
+		SELECT * FROM BOOK WHERE
+		BOOKISBN = #{bookISBN}
+	</select>
+
+	<!-- 선택 도서 베스트 순위(모든 도서) -->
+	<select id="selectAllBestRank" resultType="_int">
+		SELECT RNUM FROM(
+		SELECT ROWNUM RNUM, QQ.* FROM(
+		SELECT B.*,NVL(SELLSUM,0) SELL FROM BOOK
+		B LEFT JOIN (
+		SELECT BOOKISBN,SUM(SELLQUNTITY) SELLSUM FROM SELLDATE
+		WHERE SELLDATE >
+		SYSDATE-8 GROUP BY BOOKISBN) S ON
+		B.BOOKISBN=S.BOOKISBN ORDER BY SELL
+		DESC, B.BOOKRATING DESC,
+		B.BOOKRATINGCOUNT) QQ
+		) WHERE BOOKISBN = #{bookISBN}
+	</select>
+
+	<!-- 선택 도서 베스트 순위(카테고리) -->
+	<select id="selectCategoryBestRank" resultType="_int"
+		parameterType="Book">
+		SELECT RNUM FROM(
+		SELECT ROWNUM RNUM, QQ.* FROM(
+		SELECT
+		B.*,NVL(SELLSUM,0) SELL FROM BOOK B LEFT JOIN (
+		SELECT
+		BOOKISBN,SUM(SELLQUNTITY) SELLSUM FROM SELLDATE WHERE SELLDATE >
+		SYSDATE-8 GROUP BY BOOKISBN) S ON B.BOOKISBN=S.BOOKISBN ORDER BY SELL
+		DESC, B.BOOKRATING DESC,B.BOOKRATINGCOUNT) QQ WHERE BOOKSUBCATEGORY =
+		#{bookSubCategory}
+		) WHERE BOOKISBN = #{bookISBN}
+	</select>
+
+	<!-- 선택 도서 카테고리 베스트도서 리스트 불러오기 -->
+	<select id="selectBestBookList" resultType="Book">
+		SELECT * FROM(
+		SELECT ROWNUM RNUM, QQ.* FROM(
+		SELECT B.*,NVL(SELLSUM,0)
+		SELL FROM BOOK B LEFT JOIN (
+		SELECT BOOKISBN,SUM(SELLQUNTITY) SELLSUM
+		FROM SELLDATE WHERE SELLDATE >
+		SYSDATE-8 GROUP BY BOOKISBN) S ON
+		B.BOOKISBN=S.BOOKISBN ORDER BY SELL
+		DESC, B.BOOKRATING
+		DESC,B.BOOKRATINGCOUNT) QQ WHERE BOOKSUBCATEGORY =
+		#{bookSubCategory}
+		)
+		WHERE <![CDATA[ RNUM < 11 ]]>
+
+	</select>
+
+	<!-- 선택 도서 카테고리 신간도서 리스트 불러오기 -->
+	<select id="selectNewBookList" resultType="Book">
+		SELECT * FROM
+		(SELECT * FROM BOOK WHERE BOOKSUBCATEGORY =
+		#{bookSubCategory} ORDER BY
+		BOOKPUBLISHEDATE DESC) B WHERE  <![CDATA[ ROWNUM < 11 ]]>
+	</select>
+
+	<!-- 도서 등록 -->
+	<insert id="insertBook" parameterType="Book">
+		INSERT INTO BOOK VALUES
+		(#{bookISBN},#{bookMainImg},#{bookTitle},#{bookSubTitle},#{bookWriter},#{bookTranslator}
+		,#{bookCategory},#{bookSubCategory},#{bookPublisher},#{bookPublicheDate},#{bookPrice}
+		,#{bookContents},#{bookIntro},#{bookDetailImg},#{bookStock},DEFAULT,#{bookRating},#{bookRatingCount},DEFAULT)
+	</insert>
+
+	<insert id="sellDateInsert" parameterType="Book">
+		INSERT INTO SELLDATE
+		VALUES(#{bookISBN},#{bookRating}*10,SYSDATE)
+	</insert>
+	<update id="updateBookRating" parameterType="Book">
+		UPDATE BOOK SET
+		BOOKRATING = #{bookRating} , BOOKRATINGCOUNT =
+		#{bookRatingCount} WHERE
+		BOOKISBN = #{bookISBN}
+	</update>
+
+
+	<update id="updateBookStock" parameterType="PaymentDetail">
+		<!-- 북조건에 bookStock을 바꾼다 -->
+		UPDATE BOOK SET BOOKSTOCK = BOOKSTOCK + #{quantity}
+		WHERE BOOKISBN =
+		#{bookISBN}
+
+	</update>
+	<!-- 화제의 신간 -->
+	<select id="selectHotTopicBook" resultType="Book">
+      <![CDATA[
+      SELECT * 
+      FROM(SELECT * FROM BOOK
+      		ORDER BY BOOKPUBLISHEDATE DESC)
+		WHERE ROWNUM < 13
+      ]]>
+	</select>
+
+	<!-- 구매확인을 누를시 셀데이터에 인서트 -->
+	<insert id="insertConfirmSellDate" parameterType="list">
+		INSERT INTO
+		SELLDATE VALUES( #{list[0]}, #{list[1]}, SYSDATE)
+	</insert>
+
+	<!-- 도서 재고 추가 -->
+	<update id="updateBookPlusStock" parameterType="hashMap">
+		UPDATE BOOK SET
+		BOOKSTOCK = BOOKSTOCK + #{plusStock} WHERE BOOKISBN =
+		#{bookISBN}
+	</update>
+
+	<!-- 도서 수정 -->
+	<update id="updateBook" parameterType="Book">
+		UPDATE BOOK SET
+		BOOKMAINIMG = #{bookMainImg},BOOKTITLE = #{bookTitle},BOOKSUBTITLE =
+		#{bookSubTitle},
+		BOOKWRITER = #{bookWriter},BOOKTRANSLATOR
+		=#{bookTranslator} ,BOOKCATEGORY
+		=#{bookCategory} ,BOOKSUBCATEGORY
+		=#{bookSubCategory} ,
+		BOOKPUBLISHER = #{bookPublisher},BOOKPUBLISHEDATE
+		=#{bookPublicheDate} ,BOOKPRICE =
+		#{bookPrice},
+		BOOKCONTENTS
+		=#{bookContents} , BOOKINTRO =#{bookIntro} , BOOKDETAILIMG =
+		#{bookDetailImg},BOOKSTOCK = #{bookStock}
+		WHERE BOOKISBN = #{bookISBN}
+	</update>
+
+
+	<select id="selectCategoryBookList" resultType="Book">
+		SELECT * FROM
+		BOOK WHERE BOOKSUBCATEGORY = #{num}
+	</select>
+</mapper>

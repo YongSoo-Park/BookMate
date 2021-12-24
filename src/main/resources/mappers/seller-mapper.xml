@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="sellerMapper">
+ 	<resultMap id="sellerResultSet" type="Seller">
+		<id property="sellerNo" column="SELLER_NO"/>
+		<result property="sellerId" column="SELLER_ID"/>
+		<result property="sellerNickN" column="SELLER_NICKN"/>
+		<result property="sellerEmail" column="SELLER_EMAIL"/>
+		<result property="sellerPhone" column="SELLER_PHONE"/>
+		<result property="sellerDel" column="SELLER_DEL"/>
+		<result property="sellerDelP1" column="SELLER_DEL_PRICE1"/>
+		<result property="sellerDelP2" column="SELLER_DEL_PRICE2"/>
+		<result property="sellerAddress" column="SELLER_ADDRESS"/>		
+		<result property="enrollDate" column="ENROLL_DATE"/>		
+		<result property="modifyDate" column="MODIFY_DATE"/>		
+		<result property="status" column="STATUS"/>
+	</resultMap>
+	<resultMap id="ubookResultSet" type="Ubook">
+		<id property="ubookNo" column="UBOOK_NO"/>
+		<result property="bSellerNo" column="BSELLER_NO"/>
+		<result property="ubookName" column="UBOOK_NAME"/>
+		<result property="ubookWriter" column="UBOOK_WRITER"/>
+		<result property="ubookIsbn" column="UBOOK_ISBN"/>
+		<result property="ubCategory" column="UB_CATEGORY"/>
+		<result property="ubookTrans" column="UBOOK_TRANS"/>
+		<result property="ubookPub" column="UBOOK_PUB"/>
+		<result property="ubookPubDate" column="UBOOK_PUBDATE"/>		
+		<result property="ubookOPrice" column="UBOOK_O_PRICE"/>		
+		<result property="ubookPrice" column="UBOOK_PRICE"/>		
+		<result property="ubookStock" column="UBOOK_STOCK"/>
+		<result property="ubookQual" column="UBOOK_QUAL"/>		
+		<result property="ubookDetail" column="UBOOK_DETAIL"/>	
+		<result property="ubookContent" column="UBOOK_CONTENT"/>		
+		<result property="ubookImg" column="UBOOK_IMG"/>		
+		<result property="ubookStatus" column="UBOOK_STATUS"/>
+	</resultMap>
+		<!--
+		<select id="selectMyUbook" parameterType="Ubook" resultMap="ubookResultSet">
+			SELECT U.UBOOK_NO, U.UBOOK_IMG, U.UBOOK_NAME
+			FROM UBOOK U, SELLER S
+			WHERE U.BSELLER_NO = #{sellerNo}
+			AND U.BSELLER_NO = S.SELLER_NO;
+		</select>-->
+		
+		<!-- 판매자 닉네임 중복 확인 -->
+		<select id="chkNickN" resultType="_int">
+			SELECT COUNT(*)
+			FROM SELLER
+			WHERE SELLER_NICKN = #{sellerNickN}
+		</select>
+		
+		<!-- 판매자 휴면
+		<update id="deleteSeller" parameterType="Seller">
+			UPDATE SELLER SET STATUS='N'
+			WHERE SELLER_ID = #{sellerId}
+		</update> -->
+		<delete id="deleteSeller" parameterType="Seller">
+			DELETE FROM SELLER
+			WHERE SELLER_ID = #{sellerId}
+		</delete>
+	
+	
+		<!-- 판매자 가입 -->
+		<insert id="insertSeller" parameterType="Seller">
+			INSERT INTO SELLER VALUES (seq_sno.nextval, #{sellerId}, #{sellerNickN}, #{sellerEmail}, #{sellerPhone}, #{sellerDel}, #{sellerDelP1}, #{sellerDelP2}, #{sellerAddress}, sysdate, sysdate, default)
+		</insert>
+	
+	
+		<!-- 판매자 로그인 -->
+		<select id="loginSeller" parameterType="Seller" resultMap="sellerResultSet">
+		SELECT S.*
+		FROM SELLER S, USERS U
+		WHERE U.USER_ID = #{sellerId}
+		AND S.SELLER_ID = U.USER_ID
+		AND U.STATUS = 'Y'
+		</select>
+	
+	
+		<!-- 판매자 수정 -->
+		<update id="updateSeller" parameterType="Seller">
+		UPDATE SELLER 
+		SET
+		SELLER_EMAIL=#{sellerEmail},
+		SELLER_PHONE=#{sellerPhone},
+		SELLER_DEL=#{sellerDel},
+		SELLER_ADDRESS=#{sellerAddress},
+		MODIFY_DATE=SYSDATE
+        WHERE SELLER_ID=#{sellerId}
+		AND STATUS='Y'
+		</update>
+
+		
+	
+</mapper>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="paymentMapper">
+	
+	<!-- 나의 주문목록 조회  -->
+	<select id="selectMyOrderList" resultType ="Payment">
+		 SELECT * FROM PAYMENT
+		 WHERE USER_ID =#{user_Id}
+		 ORDER BY PAYDATE DESC
+		 
+	</select>
+	
+	
+	<!-- 나의 주문 목록 상세 조회  -->
+	<select id="selectMyOrderListDetail" resultType="PaymentDetail" parameterType="_int">
+		SELECT * FROM PAYMENTDETAIL
+		WHERE PAYMENTNO=#{paymentNo}
+		ORDER BY DELIVERYDATE  
+	</select>
+	
+	
+	<!-- 주문상태 취소로 변경하기 -->
+	<select id="cancelMyOrder" resultType="PaymentDetail" parameterType="_int">
+		UPDATE PAYMENTDETAIL
+		SET DELIVERYSTATUS = 4
+		WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+	</select>  
+	
+		<!-- 구매확정 상태로 변경하기 -->
+	<select id="confirmOrder" resultType="PaymentDetail">
+		UPDATE PAYMENTDETAIL
+		SET DELIVERYSTATUS = 8
+		WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+	</select>
+	
+	
+	<!-- 교환페이지에 있는 정보 들고오기 1  -->
+	<select id="applyExchange" resultType="PaymentDetail"  >
+		
+		SELECT * FROM PAYMENTDETAIL
+		WHERE PAYMENTDETAILNO=#{paymentDetailNo}
+				
+	</select>
+	<!-- 교환페이지에 있는 정보 들고오기 2  -->
+	<select id="selectPaymentNo" resultType="Payment">
+		SELECT * FROM PAYMENT
+		WHERE PAYMENTNO=#{paymentNo}
+	</select>
+
+
+
+	<!-- [사용자] 교환상태 업데이트  -->
+	<update id="updateUserExList" parameterType="PaymentDetail">
+		UPDATE PAYMENTDETAIL
+		SET DELIVERYSTATUS = 6
+		WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+	</update>
+	
+	
+	<!-- [관리자] 배송대기중 리스트  -->
+	<select id="selectDeliveryList" resultType="PaymentDetail" >
+
+	SELECT A.* , B.SHIPPINGNAME
+	FROM PAYMENTDETAIL A
+	JOIN PAYMENT B
+	ON A.PAYMENTNO = B.PAYMENTNO
+	WHERE DELIVERYSTATUS IN (1,2,3)
+
+	</select>
+	
+	<!--[관리자] 배송상태업데이트 배송완료로 업데이트   -->
+	<update id="updateDeliveryList" parameterType="_int">
+
+	 UPDATE PAYMENTDETAIL
+	 SET DELIVERYSTATUS = 3
+	 WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+		
+	</update> 
+
+	 
+	 <!-- 교환 완료 버튼을 누르면 교환/환불 대기중으로 상태변화하게  -->
+	 <update id="exchangeWait" parameterType="PaymentDetail">
+	 
+	 UPDATE PAYMENTDETAIL
+	 SET DELIVERYSTATUS = 7
+	 WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+		
+	 </update>
+	 
+	 <!--[사용자] 반품완료   -->
+	<update id="updateUserReList" parameterType="_int">
+		UPDATE PAYMENTDETAIL
+		SET DELIVERYSTATUS = 5
+		WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+	</update>
+	
+	<select id="cancelList" resultType="PaymentDetail">
+		
+		SELECT * FROM PAYMENTDETAIL A
+		JOIN PAYMENT B USING(PAYMENTNO)
+		WHERE DELIVERYSTATUS = 4  
+		AND USER_ID = #{user_Id}
+	
+	</select>
+	
+	<select id="selectReAndExList" resultType="PaymentDetail" >
+	
+		
+		SELECT * FROM PAYMENTDETAIL A
+		JOIN PAYMENT B USING(PAYMENTNO)
+		WHERE DELIVERYSTATUS IN(5,6)  
+		AND USER_ID = #{user_Id}
+	
+	
+	</select>
+
+	<!-- 페이먼트 디테일넘버 가지고 가서 페이먼트 디테일 객체 조회하기  -->
+	<select id="selectPaymentDetail" parameterType="_int" resultType="PaymentDetail">
+	
+	SELECT * FROM PAYMENTDETAIL
+	WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+	
+	</select>
+	
+	<select id="selectPayment" parameterType="Payment" resultType="Payment">
+	
+	SELECT * FROM PAYMENT
+	WHERE PAYMENTNO = #{paymentNo}
+	
+	</select>	
+	
+	 <update id="updateUserReturnPoint" parameterType="Payment">
+		UPDATE USERS SET POINT = POINT - #{totalGetPoint}
+		WHERE USER_ID = #{user_Id}
+	</update> 
+	
+	<!--주문 리스트 페이징처리를 위한 매퍼  -->
+	<select id="selectListCount" resultType="_int">
+		SELECT COUNT(*) FROM PAYMENT
+		WHERE USER_ID = #{user_Id}
+	</select>
+	<!-- 취소 리스트 페이징 처리르 위한 매퍼  -->
+	<select id="selectCancelListCount" resultType="_int" parameterType="PaymentDetail" >
+		SELECT COUNT(*) FROM PAYMENTDETAIL
+		JOIN PAYMENT USING(PAYMENTNO)
+		WHERE USER_ID = #{user_Id}
+	</select>
+	<!-- 교환/환불 리스트 페이징 처리르 위한 매퍼  -->
+	<select id="selectrefundAndExchangeListCount" resultType="_int" parameterType="PaymentDetail" >
+		SELECT COUNT(*) FROM RETURNBOOK
+		JOIN PAYMENTDETAIL USING(PAYMENTDETAILNO)
+		WHERE USER_ID = #{user_Id}
+	</select>
+	
+	
+
+
+	<!-- 결제 전 도서 재고 체크 -->
+	<select id="checkStock" resultType="_int">
+	SELECT BOOKSTOCK FROM BOOK WHERE BOOKISBN = #{bookISBN}
+	</select>	
+	
+	<!-- 결제 후 주문 정보 저장 -->	
+	<insert id="insertPayment" parameterType="Payment">
+	INSERT INTO PAYMENT VALUES (PAYMENT_SEQ.NEXTVAL,#{user_Id},#{shippingName},#{shippingAddress},#{shippingPhone},#{deliveryRequest},DEFAULT,#{usePoint},#{totalCost},#{paymentMethod},#{totalGetPoint},#{totalPayCost},#{deliveryCost})
+	<selectKey keyProperty="paymentNo" resultType="_int" order="AFTER">
+	SELECT PAYMENT_SEQ.CURRVAL FROM DUAL
+	</selectKey>
+	</insert>
+	
+	<!-- 결제 후 주문 상세 정보 저장  -->
+	<insert id="insertPaymentDetail" parameterType="PaymentDetail">	
+	INSERT INTO PAYMENTDETAIL VALUES (PAYMENTDETAIL_SEQ.NEXTVAL,#{paymentNo},#{bookISBN},#{bookMainImg},#{bookTitle},#{quantity},#{bookPrice},#{salePrice},#{getPoint},#{deliveryDate},DEFAULT)
+	</insert>	 
+
+	<!-- 결제 후 결제 완료한 장바구니 아이템 삭제 -->
+	<delete id="deleteBasket">
+	DELETE FROM SHOPPINGBASKET WHERE BASKETNO = #{basketNo}
+	</delete>
+	
+	<!-- 결제 후 사용자 포인트 업데이트 -->
+	<update id="updateUserPoint" parameterType="Payment">
+	UPDATE USERS SET POINT = POINT + #{usePoint} WHERE USER_ID = #{user_Id}
+	</update>
+	
+  	<!-- 결제 후 도서 재고 업데이트 -->
+	<update id="updateBookStock" parameterType="ShoppingBasket">
+	UPDATE BOOK SET BOOKSTOCK = BOOKSTOCK - #{quantity} WHERE BOOKISBN = #{bookISBN}
+	</update>
+	
+	
+</mapper>
+

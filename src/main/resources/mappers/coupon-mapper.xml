@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="couponMapper">
+
+	<!-- 쿠폰중복 체크를 위해 db정보 불러오기 -->
+	<select id="selectCoupon" resultType="Coupon">
+		SELECT * FROM COUPON WHERE
+		COUPONCODE = #{couponCode}
+	</select>
+
+	<!-- 쿠폰 등록-->
+	<insert id="insertCoupon" parameterType="Coupon">
+		INSERT INTO COUPON
+		VALUES(#{couponCode},#{couponPoint},#{couponStartDate},#{couponEndDate})
+	</insert>
+
+	<!-- 쿠폰리스트 카운트 -->
+	<select id="selectCouponListCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM COUPON WHERE COUPONCODE LIKE #{keyword}
+	</select>
+
+	<!-- 쿠폰 리스트 -->
+	<select id="selectCouponList" resultType="Coupon">
+		SELECT * FROM COUPON
+		WHERE COUPONCODE LIKE #{keyword}
+	</select>
+
+	<!-- 쿠폰수정 -->
+	<update id="updateCoupon" parameterType="Coupon">
+		UPDATE COUPON SET
+		COUPONPOINT =#{couponPoint} ,COUPONSTARTDATE
+		=#{couponStartDate} ,
+		COUPONENDDATE = #{couponEndDate} WHERE
+		COUPONCODE = #{couponCode}
+	</update>
+
+	<!-- 쿠폰 삭제-->
+	<delete id="deleteCoupon">
+		DELETE FROM COUPON WHERE COUPONCODE = #{couponCode}
+	</delete>
+
+	<!-- 쿠폰에 쿠폰번호가 있는지 확인 -->
+	<select id="checkUseCoupon" resultType="_int">
+
+		SELECT COUNT(*) FROM
+		COUPON
+		WHERE COUPONCODE = #{couponCode}
+
+	</select>
+</mapper>
+

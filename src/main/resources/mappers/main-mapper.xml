@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="mainMapper">
+
+	<!-- 3.베스트 도서 -->
+	<select id="selectBestList" resultType="Book">
+		<![CDATA[
+		SELECT * 
+		FROM(SELECT A.*
+		    FROM BOOK A  
+		    JOIN (SELECT BOOKISBN,SUM(SELLQUNTITY) SUM_Q
+		            FROM SELLDATE
+		            WHERE SELLDATE >= SYSDATE-30  --7로 바꿔야 한다!
+		            GROUP BY BOOKISBN) B
+		    ON A.BOOKISBN = B.BOOKISBN
+		    ORDER BY B.SUM_Q DESC)
+		WHERE ROWNUM <= 30
+		]]>
+	</select>
+	
+	<!-- 2.오늘의 책 -->
+	<select id="selectTodayList" resultType="Book">
+		<![CDATA[
+		SELECT A.*
+		FROM BOOK A
+		WHERE A.BOOKISBN IN (SELECT BOOKISBN
+		                    FROM(SELECT DISTINCT BOOKISBN, MAX(REVIEWDATE)
+		                        FROM BOOKREVIEW
+		                        GROUP BY BOOKISBN
+		                        ORDER BY MAX(REVIEWDATE) DESC)
+		                    WHERE ROWNUM <= 8)
+		AND A.BOOKCATEGORY = #{category_number}
+		]]>
+	</select>
+	
+	<select id="selectRecentView" resultType="RecentView">
+		SELECT *
+		FROM RECENTVIEW
+		WHERE USERID= #{userId}
+	</select>
+	
+	<insert id="insertRecentView" parameterType="hashmap">
+		INSERT INTO RECENTVIEW(USERID, BOOKS)
+		VALUES(#{userId}, #{bookISBN})
+	</insert>
+	
+	<update id="updateRecentView" parameterType="hashmap">
+		UPDATE RECENTVIEW
+		SET BOOKS = #{bookISBNS}
+		WHERE USERID = #{userId}
+	</update>
+	
+	<select id="selectRecentViewList" resultType="Book">
+		SELECT *
+		FROM BOOK
+		WHERE BOOKISBN IN
+		<foreach item="item" collection="list" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	<select id="selectEventImg" resultType="Notice">
+	SELECT * FROM NOTICE WHERE NOTICECATEGORY = 1
+	</select>
+</mapper>
+

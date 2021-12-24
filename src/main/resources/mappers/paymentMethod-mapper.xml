@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="paymentMethodMapper">
+
+	<!-- 신규 사용자 결제 수단 정보 생성 -->
+	<insert id="insertPaymentMethod">
+		INSERT INTO PAYMENTMETHOD VALUES(#{user_Id},DEFAULT)
+	</insert>
+	
+	<!-- 사용자 결제 수단 정보 가져오기 -->
+	<select id="selectPaymentMethod" resultType="PaymentMethod">
+		SELECT * FROM PAYMENTMETHOD WHERE USER_ID = #{user_Id}
+	</select>
+	
+	<!-- 사용자 결제 수단의 상세 정보 가져오기 -->
+	<select id="selectPMDetailList" parameterType="PaymentMethod"
+		resultType="PaymentMethodDetail">
+		SELECT * FROM PAYMENTMETHODDETAIL WHERE USER_ID = #{user_Id} ORDER BY (CASE
+		WHEN PAYMENTMETHODDETAILNO=#{mainPayment} THEN 1 ELSE 2
+		END),PAYMENTMETHODDETAILNO DESC
+	</select>
+	
+	<!-- 결제 수단 상세 정보 저장 -->
+	<insert id="insertPMDetail" parameterType="PaymentMethodDetail">
+		INSERT INTO PAYMENTMETHODDETAIL VALUES
+		(PAYMENTMETHODDETAIL_SEQ.NEXTVAL,#{bankName},#{bankAccount},#{bankPwd},#{userReg},#{cardCompany},#{cardNo},#{cardCVC},#{phoneNo},#{methodPwd},#{methodStatus},#{user_Id})
+		<selectKey keyProperty="paymentMethodDetailNo"
+			resultType="_int" order="AFTER">
+			SELECT PAYMENTMETHODDETAIL_SEQ.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<!-- 결제 수단 비밀번호 체크정보 -->
+	<select id="selectPaymentMethodDetail"
+		resultType="PaymentMethodDetail">
+		SELECT * FROM PAYMENTMETHODDETAIL WHERE PAYMENTMETHODDETAILNO =
+		#{paymentMethodDetailNo}
+	</select>
+	
+	<update id="updateMainMethod">
+		UPDATE PAYMENTMETHOD SET MAINPAYMENT = PAYMENTMETHODDETAIL_SEQ.CURRVAL WHERE
+		USER_ID= #{user_Id}
+	</update>
+	
+	
+	
+</mapper>

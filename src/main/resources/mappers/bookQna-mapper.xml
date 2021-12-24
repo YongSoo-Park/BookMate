@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bookQnaMapper">
+
+	<!-- 1:1 문의 리스트 카운트 -->
+	<select id="selectTotalCount" resultType="_int">
+		SELECT COUNT(*) FROM BOOKQNA WHERE BOOKISBN = #{bookISBN}
+	</select>
+	
+	<!-- 1:1 문의 리스트-->
+	<select id="selectListAll" resultType="BookQna">
+		SELECT * FROM BOOKQNA WHERE BOOKISBN = #{bookISBN}  ORDER BY QNADATE DESC
+	</select>
+	
+	<!-- 1:1 문의 상세보기 -->
+	<select id="selectQnaDetail" resultType="BookQna">
+		SELECT * FROM BOOKQNA WHERE QNANO = #{qnaNo}
+	</select>
+	
+	<!-- 1:1 문의 답변 상세보기 -->
+	<select id="selectAnswerDetail" resultType="BookQnaAnswer">
+		SELECT * FROM BOOKQNAANSWER WHERE QNANO = #{qnaNo}
+	</select>
+	
+	<!-- 1:1 문의 질문 유형별 검색 리스트  -->
+	<select id="selectList" resultType="BookQna"
+		parameterType="list">
+		SELECT * FROM BOOKQNA WHERE BOOKISBN = #{list[0]} AND QNACATEGORY =
+		#{list[1]}  ORDER BY QNADATE DESC
+	</select>
+	
+	<!-- 1:1 문의 질문 유형별 검색 리스트 카운트  -->
+	<select id="selectKindCount" parameterType="list"
+		resultType="_int">
+		SELECT COUNT(*) FROM BOOKQNA WHERE BOOKISBN = #{list[0]} AND QNACATEGORY =
+		#{list[1]}
+	</select>
+	
+	<!-- 1:1 문의 질문 등록  -->
+	<insert id="qnaInsert" parameterType="BookQna">
+		INSERT INTO BOOKQNA VALUES(BOOKQNA_SEQ.NEXTVAL, #{user_Id}, #{bookISBN},
+		#{bookTitle}, #{qnaCategory}, #{qnaTitle}, #{qnaContent}, SYSDATE, 0,
+		#{qnaSecret})
+	</insert>
+	
+	<!-- 1:1 문의 질문 수정  -->
+	<update id="qnaUpdate" parameterType="BookQna">
+		UPDATE BOOKQNA SET QNATITLE = #{qnaTitle}, QNACONTENT = #{qnaContent},
+		QNACATEGORY = #{qnaCategory},QNASECRET = #{qnaSecret} WHERE QNANO =
+		#{qnaNo}
+	</update>
+	
+	<!-- 1:1 문의 질문 삭제  -->
+	<delete id="qnaDelete">
+		DELETE FROM BOOKQNA WHERE QNANO = #{qnaNo}
+	</delete>
+	
+	
+	<!-- 관리자 문의 리스트 카운트 -->
+	<select id="selectA_QnaListCount" parameterType="hashMap"
+		resultType="_int">
+		SELECT COUNT(*) FROM BOOKQNA WHERE
+		<if test="isAnswer==1">
+			QNAANSWER = 0 AND
+		</if>
+		<choose>
+			<when test="searchKind==1">
+				QNATITLE LIKE #{keyword} ORDER BY QNADATE DESC
+			</when>
+			<when test="searchKind==2">
+				BOOKTITLE LIKE #{keyword} ORDER BY QNADATE DESC
+			</when>
+		</choose>
+	</select>
+	
+	<!-- 관리자 문의 리스트  -->
+	<select id="selectB_QnaList" parameterType="hashMap"
+		resultType="BookQna">
+		SELECT * FROM BOOKQNA WHERE
+		<if test="isAnswer==1">
+			QNAANSWER = 0 AND
+		</if>
+		<choose>
+			<when test="searchKind==1">
+				QNATITLE LIKE #{keyword} ORDER BY QNADATE DESC
+			</when>
+			<when test="searchKind==2">
+				BOOKTITLE LIKE #{keyword} ORDER BY QNADATE DESC
+			</when>
+		</choose>
+	</select>
+	
+	<!-- 관리자 문의 상세보기 -->
+	<select id="selectA_QnaDetail" resultType="BookQna">
+		SELECT * FROM BOOKQNA WHERE QNANO = #{qnaNo}
+	</select>
+	
+	<!-- 관리자 문의 답변 상세보기-->
+	<select id="selectA_QnaAnswerDetail" resultType="BookQnaAnswer">
+		SELECT * FROM BOOKQNAANSWER WHERE QNANO = #{qnaNo}
+	</select>
+	
+	<!-- 관리자 답변등록 -->
+	<insert id="intsertQnaAnswer" parameterType="BookQnaAnswer">
+		INSERT INTO BOOKQNAANSWER VALUES
+		(BOOKQNAANSWER_SEQ.NEXTVAL,#{qnaNo},#{qnaAnswerContent},SYSDATE)
+	</insert>
+	
+	<!-- 관리자 답변등록시 질문글 업데이트-->
+	<update id="updateQnaInsertAnswer">
+		UPDATE BOOKQNA SET QNAANSWER = 1 WHERE QNANO = #{qnaNo}
+	</update>
+	
+	<!-- 관리자 답변수정 -->
+	<update id="updateQnaAnswer" parameterType="BookQnaAnswer">
+		UPDATE BOOKQNAANSWER SET QNAANSWERCONTENT = #{qnaAnswerContent} WHERE
+		QNAANSWERNO = #{qnaAnswerNo}
+	</update>
+	
+	<!-- 관리자 답변삭제 -->
+	<delete id="deleteQnaAnswer">
+		DELETE FROM BOOKQNAANSWER WHERE QNANO = #{qnaNo}
+	</delete>
+	
+	<!-- 관리자 답변삭제시 질문글 업데이트-->
+	<update id="updateQnaDeleteAnswer">
+		UPDATE BOOKQNA SET QNAANSWER = 0 WHERE QNANO = #{qnaNo}
+	</update>
+	
+	
+
+	<select id="selectMyQnaList" resultType="BookQna"
+		parameterType="hashMap">
+		SELECT * FROM BOOKQNA WHERE BOOKISBN = #{bookISBN} AND USER_ID = #{user_Id}
+	</select>
+	
+	<select id="selectMyQnaCount" parameterType="hashMap"
+		resultType="_int">
+		SELECT COUNT(*) FROM BOOKQNA WHERE BOOKISBN = #{bookISBN} AND USER_ID =
+		#{user_Id}
+	</select>
+
+</mapper>

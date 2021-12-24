@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ExchangeItemMapper">
+ 
+	<insert id="insertExchangeItem" parameterType="ExchangeItem">
+
+	INSERT INTO EXCHANGE_ITEM VALUES(SEQ_EXNO.NEXTVAL,#{user_Id},
+	#{paymentDetailNo},DEFAULT,#{exchangeName},
+	#{exchangePhone},#{exchangeAddress})
+
+	</insert>
+
+
+	<select id="selectExchangeList" parameterType="ExchangeItem" resultType="ExchangeItem">
+		SELECT * FROM EXCHANGE_ITEM 	
+		ORDER BY EXCHANGENO DESC
+	</select>
+	
+
+
+	<select id="selectOrderDetailList" parameterType="ExchangeItem" resultType="PaymentDetail" >
+	
+		SELECT * FROM PAYMENTDETAIL
+		WHERE PAYMENTDETAILNO IN
+		<foreach item="item" collection="list" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	 
+
+
+	<update id="updateExchangeList" parameterType="_int" >
+	
+	 UPDATE EXCHANGE_ITEM
+	 SET EXCHANGESTATUS = 2
+	 WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+	
+	</update>
+
+</mapper>

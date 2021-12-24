@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="wishListMapper">
+<select id="selectWish" parameterType="WishList" resultType="WishList">
+SELECT * FROM WISHLIST WHERE USER_ID = #{user_Id} AND BOOKISBN = #{bookISBN}
+</select>
+
+<insert id="insertWishList" parameterType="WishList">
+INSERT INTO WISHLIST VALUES(WISHLIST_SEQ.NEXTVAL,#{user_Id},#{bookISBN})
+</insert>
+
+<delete id="deleteWishList" parameterType="WishList">
+DELETE FROM WISHLIST WHERE USER_ID = #{user_Id} AND BOOKISBN = #{bookISBN} 
+</delete>
+
+<!-- 마이페이지에서 찜목록 조회하는 것  -->
+<select id="selectMyWishList" resultType="WishList">
+
+   SELECT USER_ID, BOOKISBN,BOOKMAINIMG,
+   BOOKTITLE,BOOKWRITER FROM WISHLIST
+   JOIN BOOK USING(BOOKISBN)
+   WHERE USER_ID = #{user_Id}
+   
+</select>
+
+</mapper>

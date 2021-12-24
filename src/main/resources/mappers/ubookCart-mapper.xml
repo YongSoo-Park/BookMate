@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ubookCartMapper">
+<!--  	<resultMap id="ubookCartResultSet" type="UbookCart">
+		<id property="cartNo" column="CARTNO"/>
+		<result property="cartUbNo" column="CARTUBNO"/>
+		<result property="cartUserId" column="CARTUSERID"/>
+		<result property="cartCount" column="CARTCOUNT"/>
+	</resultMap> -->
+	
+	 	<resultMap id="ubookResultSet" type="Ubook">
+		<id property="ubookNo" column="UBOOK_NO"/>
+		<result property="bSellerNo" column="BSELLER_NO"/>
+		<result property="ubookName" column="UBOOK_NAME"/>
+		<result property="ubookWriter" column="UBOOK_WRITER"/>
+		<result property="ubookIsbn" column="UBOOK_ISBN"/>
+		<result property="ubCategory" column="UB_CATEGORY"/>
+		<result property="ubookTrans" column="UBOOK_TRANS"/>
+		<result property="ubookPub" column="UBOOK_PUB"/>
+		<result property="ubookPubDate" column="UBOOK_PUBDATE"/>		
+		<result property="ubookOPrice" column="UBOOK_O_PRICE"/>		
+		<result property="ubookPrice" column="UBOOK_PRICE"/>		
+		<result property="ubookStock" column="UBOOK_STOCK"/>
+		<result property="ubookQual" column="UBOOK_QUAL"/>		
+		<result property="ubookDetail" column="UBOOK_DETAIL"/>	
+		<result property="ubookContent" column="UBOOK_CONTENT"/>		
+		<result property="ubookImg" column="UBOOK_IMG"/>		
+		<result property="ubookStatus" column="UBOOK_STATUS"/>
+		<result property="sellerNickN" column="SELLER_NICKN"/>
+		<result property="sellerNo" column="SELLER_NO"/>
+		<result property="sellerId" column="SELLER_ID"/>
+	</resultMap>
+<insert id="insertCart" parameterType="UbookCart">
+INSERT INTO UBOOK_CART VALUES(SEQ_UBCARTNO.NEXTVAL,#{cartUbNo},#{cartUserId},#{cartCount})
+</insert>
+
+<select id="selectCartList" resultType="UbookCart">
+SELECT * FROM UBOOK_CART WHERE CARTUSERID = #{cartUserId}
+</select>
+<select id="selectUBookList" parameterType="list" resultMap="ubookResultSet">
+	SELECT B.* FROM 
+	(SELECT * FROM UBOOK_CART WHERE CARTUSERID = #{list[0].cartUserId}) SB JOIN UBOOK B ON (SB.CARTUBNO=B.UBOOK_NO)
+</select>
+<!-- <select id="selectUBookList" parameterType="String" resultMap="ubookResultSet">
+	SELECT B.* FROM 
+	(SELECT * FROM UBOOK_CART WHERE CARTUSERID = #{cartUserId}) SB JOIN UBOOK B ON (SB.CARTUBNO=B.UBOOK_NO)
+</select> -->
+<delete id="deleteCart">
+DELETE FROM UBOOK_CART WHERE CARTNO = #{cartNo}
+</delete>
+
+	<!-- 도서 삭제될 때 수량도 변경 #{ubookNoUb}-->
+	<!-- <update id="updateUbookStock" parameterType="Ubook">
+		UPDATE UBOOK
+		SET
+		UBOOK_STOCK = (UBOOK_STOCK-1)
+		WHERE UBOOK_NO=#{cartUbNo}
+	</update> -->
+	
+<select id="selectCart" resultType="UbookCart">
+SELECT * FROM UBOOK_CART WHERE CARTUSERID = #{cartUserId} AND CARTUBNO = #{cartUbNo}
+</select>
+</mapper>

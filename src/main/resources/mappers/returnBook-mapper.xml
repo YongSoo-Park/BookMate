@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ReturnBookMapper">
+ 
+
+
+	<insert id="insertReturnBook" parameterType="ReturnBook">
+	
+		INSERT INTO RETURNBOOK VALUES(SEQ_RENO.NEXTVAL,#{user_Id},
+		#{paymentDetailNo},#{returnName},#{returnReason},#{returnPaymentMethod},#{returnPoint},#{returnDeliveryPrice},
+		#{returnTotalPrice}, DEFAULT)
+
+	</insert>
+	
+	
+	<select id="selectReturnList" resultType="ReturnBook" >
+		
+		SELECT * FROM RETURNBOOK
+		ORDER BY RETURNNO DESC
+	
+	</select>
+	
+	<select id="selectReturnOrderDetailNoList" parameterType="ReturnBook" resultType="PaymentDetail">
+
+		SELECT * FROM PAYMENTDETAIL
+		WHERE PAYMENTDETAILNO IN
+
+	<foreach item="item" collection="list" open="(" close=")" separator=",">
+		#{item}
+	 </foreach>
+	</select>
+	
+	
+	<update id="updateReturnList" parameterType="_int">
+	
+		UPDATE RETURNBOOK
+		SET RETURNSTATUS = 2
+		WHERE PAYMENTDETAILNO = #{paymentDetailNo}
+
+	</update>
+
+</mapper>

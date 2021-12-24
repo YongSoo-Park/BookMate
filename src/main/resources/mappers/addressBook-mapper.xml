@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="addressBookMapper">
+
+
+<select id="selectMyAddressList" resultType="AddressBook">
+SELECT * FROM ADDRESSBOOK WHERE USER_ID = #{user_Id}
+</select>
+
+<!-- 결제후 주소록 이전 결제 주소 업데이트 -->
+<update id="updateLatelyAddress" parameterType="hashMap">
+UPDATE ADDRESSBOOK SET LATELYADDRESS = #{latelyAddress} WHERE USER_ID = #{user_Id}
+</update>
+
+<!-- 유저 주소록 불러오기 -->
+<select id="selcetAddressBook" resultType="AddressBook">
+SELECT * FROM ADDRESSBOOK WHERE USER_ID = #{user_Id}
+</select>
+
+<!-- 신규 사용자 주소록 생성 -->
+<insert id="insertAddressBook">
+INSERT INTO ADDRESSBOOK(USER_ID,MAINADDRESS) VALUES(#{user_Id},#{mainAddress})
+</insert>
+
+</mapper>

@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="clubMapper">
+
+
+  <resultMap id="clubResultSet" type="Club">
+		<id column="CLUB_NO" property="clubNo"/>
+		<result column="REF_PLACE_NO" property="placeNo"/>
+		<result column="USER_ID" property="userId"/>
+		<result column="CLUB_TITLE" property="clubTitle"/>
+		<result column="INTRO" property="intro"/>
+		<result column="ACTIVITY" property="activity"/>
+		<result column="WANT" property="want"/>
+		<result column="NOTWANT" property="notwant"/>
+		<result column="TIMES" property="times"/>
+		<result column="ONOFF_LINE" property="onoffLine"/>
+		<result column="CLUB_CAPACITY" property="clubCapacity"/>
+		<result column="CSTART_DATE" property="clubStartDate"/>
+		<result column="CEND_DATE" property="clubEndDate"/>
+		<result column="BK_NAME" property="bkName"/>
+		<result column="BK_WRITER" property="bkWriter"/>
+		<result column="BK_PUBLISHER" property="bkPublisher"/>
+		<result column="CREATE_DATE" property="createDate"/>
+		<result column="CONDITION" property="condition"/>
+		<result column="STATUS" property="status"/>
+		<result column="HOST_COMMENT" property="hostComment"/>
+		<result column="HOST_NAME" property="hostName"/>
+		<result column="HSTART_DATE" property="hstartDate"/>
+		<result column="HEND_DATE" property="hendDate"/>
+		<result column="HWHAT_TODO" property="hwhatTodo"/>
+		<result column="CATEGORY" property="category"/>
+		<result column="HEART_COUNT" property="heartCount"/>
+		<result column="CHANGE_NAME" property="titleChangeName"/>
+	
+		<!-- detailClub용(11.07) -->
+		<!-- 속성들 1)property:필드명  2)ofType:필드의클래스위치   -->
+		<collection property="clubTimes" ofType="com.kh.bookmate.club.model.vo.ClubTime">
+			<id column="CLUB_TIME_NO" property="timeNo" jdbcType="INTEGER" />
+			<result column="REF_CLUB_NO" property="clubNo" jdbcType="INTEGER" />  <!-- 되려나 -->
+			<result column="CLUB_DATE" property="clubDate" jdbcType="DATE" />
+			<result column="START_TIME" property="startTime" jdbcType="VARCHAR" />
+			<result column="END_TIME" property="endTime" jdbcType="VARCHAR" />
+			<result column="APPLY_COUNT" property="apply_count" jdbcType="INTEGER" />
+		</collection>
+		
+		<collection property="clubAttachments" ofType="com.kh.bookmate.club.model.vo.ClubAttachment">
+			<!-- <id column="FILE_NO" property="fileNo" jdbcType="INTEGER" /> 
+			https://stackoverflow.com/questions/51080884/how-to-use-multiple-collection-in-mybatis-resultmap
+			이 객체가 time의 갯수에따라 여러 개 생성되어서 참고해서 고치니 해결됐다.-->
+			<result column="REF_CLUB_NO" property="clubNo" jdbcType="INTEGER" />  <!-- 되려나 -->
+			<result column="ORIGINAL_NAME" property="originalName" jdbcType="DATE" />
+			<result column="CHANGE_NAME" property="changeName" jdbcType="VARCHAR" />
+			<result column="FILE_TYPE" property="fileType" jdbcType="VARCHAR" />
+		</collection>
+	</resultMap>
+
+	
+	<resultMap id="clubAttachmentResultSet" type="ClubAttachment">
+		<id column="FILE_NO" property="fileNo"/>
+		<result column="REF_CLUB_NO" property="clubNo"/>
+		<result column="ORIGINAL_NAME" property="originalName"/>
+		<result column="CHANGE_NAME" property="changeName"/>
+		<result column="FILE_TYPE" property="fileType"/>
+	</resultMap>
+
+	<resultMap id="clubTimeResultSet" type="ClubTime">
+		<id column="CLUB_TIME_NO" property="timeNo"/>
+		<result column="REF_CLUB_NO" property="clubNo"/>
+		<result column="CLUB_DATE" property="clubDate"/>
+		<result column="START_TIME" property="startTime"/>
+		<result column="END_TIME" property="endTime"/>
+		<result column="STATUS" property="status"/>
+		<result column="APPLY_COUNT" property="apply_count"></result>
+	</resultMap>
+
+
+	<select id="checkHost" resultType="_int">
+		SELECT COUNT(*)
+		FROM CLUB
+		WHERE HOST_NAME = #{hostName}
+	</select>
+	
+	<!-- insert 후 key 값 가져온다. 1단계 저장 후 바로 2단계에 같은 clubNo로 저장해야 하기 때문-->
+	<insert id="saveStep1_1" parameterType="Club">
+		INSERT INTO
+		CLUB(CLUB_NO, USER_ID, HOST_NAME, HOST_COMMENT, HSTART_DATE, HEND_DATE, HWHAT_TODO)
+		VALUES(SEQ_CNO.NEXTVAL, #{userId}, #{hostName}, #{hostComment},#{hstartDate}, #{hendDate}, #{hwhatTodo})
+		<selectKey keyProperty="clubNo" resultType="_int" order="AFTER">
+			SELECT SEQ_CNO.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<insert id="saveStep1_2" parameterType="ClubAttachment">
+		INSERT INTO CLUB_ATTACHMENT
+		VALUES(SEQ_CANO.NEXTVAL, SEQ_CNO.CURRVAL, #{originalName}, #{changeName}, #{fileType})
+	</insert>
+
+
+	<update id="saveStep2_1" parameterType="Club">
+		UPDATE CLUB
+		SET CATEGORY=#{category}, CLUB_TITLE=#{clubTitle},
+			INTRO=#{intro}, ACTIVITY=#{activity}, WANT=#{want}, NOTWANT=#{notwant},
+			CLUB_CAPACITY=#{clubCapacity}
+		WHERE CLUB_NO=#{clubNo} AND STATUS='Y'
+	</update>
+	
+	<insert id="saveStep2_2" parameterType="ClubAttachment">
+		INSERT INTO CLUB_ATTACHMENT
+		VALUES(SEQ_CANO.NEXTVAL, #{clubNo}, #{originalName}, #{changeName}, #{fileType})
+	</insert>
+	
+	
+	<update id="saveStep3_1" parameterType="Club">
+		UPDATE CLUB
+		SET ONOFF_LINE=#{onoffLine}, TIMES=#{times},
+			CSTART_DATE=#{clubStartDate}, CEND_DATE=#{clubEndDate}, 
+			BK_NAME=#{bkName}, BK_WRITER=#{bkWriter}, BK_PUBLISHER=#{bkPublisher}
+		WHERE CLUB_NO=#{clubNo} AND STATUS='Y'
+	</update>
+
+	<!-- foreach 시도3 : 성공! 
+	     전달받는 값의 자료형에 따라서 foreach 다르게 써준다. 아래는 list를 받았을 경우이다-->
+	<insert id="saveStep3_2" parameterType="java.util.Map">
+		INSERT INTO CLUB_TIME(CLUB_TIME_NO,REF_CLUB_NO,CLUB_DATE,START_TIME,END_TIME)
+		SELECT SEQ_CTNO.NEXTVAL, A.* 
+		FROM(
+			<foreach item="item" collection="list" separator="UNION ALL ">
+				select 
+				#{item.clubNo} as REF_CLUB_NO,
+				#{item.clubDate} as CLUB_DATE,
+				#{item.startTime} as START_TIME,
+				#{item.endTime} as END_TIME
+				from dual
+			</foreach>) A
+	</insert>
+	
+	<update id="insertClub" parameterType="Club">
+		UPDATE CLUB
+		SET ONOFF_LINE=#{onoffLine}, TIMES=#{times},
+			CSTART_DATE=#{clubStartDate}, CEND_DATE=#{clubEndDate}, 
+			BK_NAME=#{bkName}, BK_WRITER=#{bkWriter}, BK_PUBLISHER=#{bkPublisher},
+			CONDITION=2
+		WHERE CLUB_NO=#{clubNo} AND STATUS='Y'
+	</update>
+	
+	<!-- 페이징처리 안됨,,, https://okky.kr/article/1091369(okky에 질문했지만 영양가있는 답은 없었다..) -->
+	<!-- <select id="selectList3" resultMap="clubResultSet">
+		SELECT HOST_NAME, CLUB_NO, CATEGORY, CLUB_TITLE, ONOFF_LINE, CLUB_CAPACITY, CONDITION, B.CLUB_TIME_NO, B.CLUB_DATE, B.START_TIME, B.END_TIME
+		FROM CLUB A
+		LEFT JOIN CLUB_TIME B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		WHERE USER_ID=#{userId} AND A.STATUS='Y'
+		ORDER BY CLUB_NO DESC	
+	</select> -->
+	
+	<!-- 마이페이지조회1 : club테이블 페이징조회 -->
+	<select id="selectList_club" resultMap="clubResultSet">
+		SELECT HOST_NAME, CLUB_NO, CATEGORY, CLUB_TITLE, ONOFF_LINE, CLUB_CAPACITY, CONDITION, CSTART_DATE, CEND_DATE
+		FROM CLUB 
+		WHERE USER_ID=#{userId} AND STATUS='Y'
+		ORDER BY CLUB_NO DESC	
+	</select>
+
+	<!-- 마이페이지조회2 : club_time 테이블 위에서조회해온 clubNo로 조회-->
+	<select id="selectList_clubTime" resultMap="clubTimeResultSet">
+		SELECT REF_CLUB_NO, CLUB_DATE, START_TIME, END_TIME
+		FROM CLUB_TIME
+		WHERE REF_CLUB_NO IN
+		<foreach item="item" collection="list" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		ORDER BY REF_CLUB_NO DESC, CLUB_DATE	
+	</select>
+	
+	
+	
+<!-- 독서모임개설관리(mypage3)-독서모임 삭제 -->
+	<!--1.for 사진 삭제(프로젝트 upload_files에서)  -->
+	<select id="selectPhotoList" resultMap="clubAttachmentResultSet">
+		SELECT * FROM CLUB_ATTACHMENT
+		WHERE REF_CLUB_NO IN
+		<foreach item="item" collection="list" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+
+	<!-- 2.club에서 삭제 -->
+	<delete id="deleteClub3" parameterType="_int">
+		DELETE CLUB
+		WHERE STATUS='Y' AND CLUB_NO IN 
+		<foreach item="item" collection="list" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</delete>
+	
+	
+	<!-- listcount for 페이징처리용 -->
+	<select id="selectListCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM CLUB
+		WHERE STATUS='Y'	
+		AND USER_ID = #{userId}	
+	</select>
+	
+	<!-- 메인페이지 - category클릭시 리스트 넘기기 -->
+	<select id="selectCateList" resultMap="clubResultSet">
+		<![CDATA[
+		SELECT A.* , B.CHANGE_NAME 
+		FROM CLUB A
+		LEFT JOIN CLUB_ATTACHMENT B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		WHERE A.CONDITION=4 AND A.STATUS='Y'
+		AND TO_CHAR(CSTART_DATE, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		AND TO_CHAR(CEND_DATE, 'YYYY-MM-DD') > TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+		AND CATEGORY=#{category}
+		AND B.FILE_TYPE=2
+		ORDER BY A.CLUB_NO
+		]]>
+	</select>
+	
+	<!-- 메인페이지 - 마감임박 리스트(1.Club테이블에서 조회) -->
+	<select id="selectEndList" resultMap="clubResultSet">
+		<![CDATA[
+		SELECT *
+		FROM(SELECT A.* , B.CHANGE_NAME 
+		    FROM CLUB A
+		    LEFT JOIN CLUB_ATTACHMENT B
+		    ON A.CLUB_NO = B.REF_CLUB_NO
+		    WHERE A.CONDITION=4 AND A.STATUS='Y'
+		    AND TO_CHAR(CSTART_DATE, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		    AND TO_CHAR(CEND_DATE, 'YYYY-MM-DD') > TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		    AND B.FILE_TYPE=2
+		    ORDER BY CEND_DATE)
+		WHERE ROWNUM <=6
+		]]>
+	</select>
+	
+	<select id="selectPopList" resultMap="clubResultSet">
+		<![CDATA[
+		SELECT *
+		FROM(SELECT A.* , B.CHANGE_NAME 
+		    FROM CLUB A
+		    LEFT JOIN CLUB_ATTACHMENT B
+		    ON A.CLUB_NO = B.REF_CLUB_NO
+		    WHERE A.CONDITION=4 AND A.STATUS='Y'
+		    AND TO_CHAR(CSTART_DATE, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		    AND TO_CHAR(CEND_DATE, 'YYYY-MM-DD') > TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		    AND B.FILE_TYPE=2
+		    ORDER BY HEART_COUNT DESC)
+		WHERE ROWNUM <=12
+		]]>
+	</select>
+	
+	<!-- 메인페이지 - 마감임박 리스트(2. ClubAttachment테이블에서 조회) 
+	     **이 부분은 페이징처리가 없으니 collection으로 해도 될 것 같은데?-->
+	<select id="selectList_clubAttachment" resultMap="clubAttachmentResultSet">
+		SELECT *
+		FROM CLUB_ATTACHMENT
+		WHERE REF_CLUB_NO IN
+		<foreach item="item" collection="list" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		ORDER BY REF_CLUB_NO DESC	
+	</select>
+	
+	
+	
+	<!-- 디테일페이지 조회 -->
+	<select id="selectClub" parameterType="java.util.Map" resultMap="clubResultSet">
+		SELECT A.*, B.*, C.REF_CLUB_NO, C.ORIGINAL_NAME, C.CHANGE_NAME, C.FILE_TYPE
+		FROM CLUB A
+		LEFT JOIN CLUB_TIME B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		LEFT JOIN CLUB_ATTACHMENT C
+		ON A.CLUB_NO = C.REF_CLUB_NO
+		WHERE A.STATUS='Y'
+		AND A.CLUB_NO=#{cno}
+		ORDER BY B.CLUB_DATE	
+	</select>
+	
+	<!-- 독서모임 step1 수정 -->
+	<update id="updateStep1" parameterType="Club">
+		UPDATE CLUB
+		SET HOST_NAME=#{hostName}, HOST_COMMENT=#{hostComment},
+			HSTART_DATE=#{hstartDate}, HEND_DATE=#{hendDate}, HWHAT_TODO=#{hwhatTodo}
+		WHERE CLUB_NO=#{clubNo} AND STATUS='Y'
+	</update>
+	
+	<!-- 독서모임 사진 수정)update -->
+	<update id="updateStep_attach" parameterType="ClubAttachment">
+		UPDATE CLUB_ATTACHMENT
+		SET ORIGINAL_NAME=#{originalName},
+			CHANGE_NAME=#{changeName}
+		WHERE REF_CLUB_NO=#{clubNo} AND FILE_TYPE=#{fileType}
+	</update>
+	
+	<!-- 마이페이지2 - 페이징처리 -->
+	<select id="selectListCount2" parameterType="hashmap" resultType="_int">
+		SELECT COUNT(*)
+		FROM ${table}
+		WHERE USER_ID = #{userId}	
+	</select>
+	
+	<!-- 마이페이지2, 마이페이지1 - clubNo갯수 세기 -->
+	<select id="selectClubNoList" parameterType="hashmap" resultType="_int">
+		SELECT REF_CLUB_NO
+		FROM ${table}
+		WHERE USER_ID = #{userId}
+	</select>
+	
+	<select id="selectMypageList" parameterType="java.util.Map" resultMap="clubResultSet">
+		SELECT A.*, B.*, C.REF_CLUB_NO, C.ORIGINAL_NAME, C.CHANGE_NAME, C.FILE_TYPE
+		FROM CLUB A
+		LEFT JOIN CLUB_TIME B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		LEFT JOIN CLUB_ATTACHMENT C
+		ON A.CLUB_NO = C.REF_CLUB_NO
+		WHERE A.STATUS='Y'
+		AND A.CLUB_NO IN
+		<foreach item="item" collection="list" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		ORDER BY B.CLUB_DATE	
+	</select>
+	
+	<update id="updateCondition" parameterType="hashmap">
+		UPDATE CLUB
+		SET CONDITION=#{condition}
+		WHERE CLUB_NO=#{clubNo}
+	</update>
+	
+	<!-- 모든 독서모임 - 모집중 -->
+	<select id="selectListCount_1" parameterType="hashmap" resultType="_int">
+		<![CDATA[
+		SELECT COUNT(*) 
+		FROM CLUB 
+		WHERE STATUS='Y'
+		AND TO_CHAR(CSTART_DATE, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD') ]]>
+		<if test="type != 0">  <!-- type: condition(독서모임 상태) -->
+			<choose>
+				<when test="type == 4">
+					AND CONDITION=#{type}
+					<![CDATA[AND TO_CHAR(CEND_DATE, 'YYYY-MM-DD') > TO_CHAR(SYSDATE, 'YYYY-MM-DD') ]]>
+				</when>
+				<when test="type == 5">
+					AND CONDITION=#{type}
+					<![CDATA[AND TO_CHAR(CEND_DATE, 'YYYY-MM-DD') < TO_CHAR(SYSDATE, 'YYYY-MM-DD') ]]>
+				</when>
+				<otherwise>
+					AND CONDITION=#{type}
+				</otherwise>
+			</choose>
+		</if>
+		<if test=' !"".equals(category) '>
+			AND CATEGORY=#{category}
+		</if>
+	</select>
+
+	
+	<!-- SELECT A.* , B.CHANGE_NAME 
+		FROM CLUB A
+		LEFT JOIN CLUB_ATTACHMENT B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		WHERE A.CONDITION=4 AND A.STATUS='Y'
+		AND TO_CHAR(CSTART_DATE, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		AND TO_CHAR(CEND_DATE, 'YYYY-MM-DD') >= TO_CHAR(SYSDATE, 'YYYY-MM-DD') ]]>
+		<if test='!"".equals(category)'>
+			AND CATEGORY=#{category}
+		</if>
+		AND B.FILE_TYPE=2
+		ORDER BY CSTART_DATE DESC -->
+	
+	<select id="selectCateList_1" resultMap="clubResultSet">
+		<![CDATA[
+		SELECT B.CLUB_NO, B.CLUB_TITLE, B.CATEGORY, B.ONOFF_LINE, B.HEART_COUNT, C.CHANGE_NAME
+		FROM (SELECT REF_CLUB_NO, SUM(APPLY_COUNT) SUM_APPLY
+			  FROM CLUB_TIME
+			  GROUP BY REF_CLUB_NO) A
+		JOIN CLUB B
+		ON A.REF_CLUB_NO = B.CLUB_NO
+		JOIN CLUB_ATTACHMENT C
+		ON C.REF_CLUB_NO = B.CLUB_NO
+		WHERE CONDITION=4
+		AND C.FILE_TYPE=2 ]]>
+		<if test='!"".equals(category)'>
+			AND CATEGORY=#{category}
+		</if>
+		<![CDATA[
+		ORDER BY A.SUM_APPLY DESC
+		]]>
+	</select>
+	
+	<select id="selectCateList_2" resultMap="clubResultSet">
+		<![CDATA[
+		SELECT A.* , B.CHANGE_NAME 
+		FROM CLUB A
+		LEFT JOIN CLUB_ATTACHMENT B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		WHERE CONDITION=5 AND STATUS='Y'
+		AND TO_CHAR(CSTART_DATE, 'YYYY-MM-DD') <= TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		AND TO_CHAR(CEND_DATE, 'YYYY-MM-DD') < TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+		AND CATEGORY=#{category}
+		AND B.FILE_TYPE=2
+		ORDER BY CEND_DATE DESC
+		]]>
+	</select>
+	
+	<!-- 신청자 많은 순으로 뽑기 -->
+	<select id="selectCateList_3" resultMap="clubResultSet">
+		<![CDATA[
+		SELECT * 
+		FROM(SELECT B.CLUB_NO, B.CLUB_TITLE, B.CATEGORY, B.HEART_COUNT, C.CHANGE_NAME
+			FROM (SELECT REF_CLUB_NO, SUM(APPLY_COUNT) SUM_APPLY
+			      FROM CLUB_TIME
+			      GROUP BY REF_CLUB_NO) A
+			JOIN CLUB B
+			ON A.REF_CLUB_NO = B.CLUB_NO
+			JOIN CLUB_ATTACHMENT C
+			ON C.REF_CLUB_NO = B.CLUB_NO
+			WHERE CONDITION=6
+			AND C.FILE_TYPE=2 AND CATEGORY=#{category}
+			ORDER BY A.SUM_APPLY DESC)
+		WHERE ROWNUM < 6
+		]]>
+	</select>
+	
+	<!-- search 기능 페이징 처리용 listcount구하기
+		 오류 원인 :  AND , OR조건 ()가 없어서였다. (11/28) -->
+	<select id="selectListCount_search" parameterType="SearchCondition" resultType="_int">
+		SELECT COUNT(*)
+		FROM CLUB A
+		JOIN CLUB_ATTACHMENT B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		WHERE 
+		A.CLUB_NO IN (SELECT REF_CLUB_NO
+		                  FROM CLUB_TIME
+		                  <trim prefix="WHERE" prefixOverrides="AND|OR">
+					          <if test="startDate != null">
+					              AND <![CDATA[CLUB_DATE >= #{startDate}]]>
+					          </if>
+					          <if test="endDate != null">
+					              AND <![CDATA[CLUB_DATE <= #{endDate}]]>
+					          </if>
+					      </trim> 
+		                  GROUP BY REF_CLUB_NO) 
+		AND A.CONDITION = 4
+		AND A.STATUS = 'Y'
+		AND B.FILE_TYPE = 2
+		<if test='!"".equals(keyword)'>
+			AND (CLUB_TITLE LIKE '%'||#{keyword}||'%' 
+			OR BK_NAME LIKE '%'||#{keyword}||'%')
+		</if>
+		<if test="onoffLines != null &amp;&amp; !onoffLines.isEmpty()">
+			AND ONOFF_LINE IN
+			<foreach item="item" collection="onoffLines" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="categories != null &amp;&amp; !categories.isEmpty()">
+			AND CATEGORY  IN
+			<foreach item="item" collection="categories" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="times != null &amp;&amp; !times.isEmpty()">
+			AND TIMES  IN
+			<foreach item="item" collection="times" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		ORDER BY CLUB_NO
+	</select>
+	
+	<select id="selectList_search" parameterType="SearchCondition" resultMap="clubResultSet">
+		SELECT A.CLUB_NO, A.CLUB_TITLE, A.CATEGORY, A.ONOFF_LINE, A.HEART_COUNT, B.CHANGE_NAME
+		FROM CLUB A
+		JOIN CLUB_ATTACHMENT B
+		ON A.CLUB_NO = B.REF_CLUB_NO
+		WHERE STATUS='Y'
+		AND A.CONDITION = 4
+		AND B.FILE_TYPE = 2 
+		AND A.CLUB_NO IN (SELECT REF_CLUB_NO
+		                  FROM CLUB_TIME
+		                  <trim prefix="WHERE" prefixOverrides="AND|OR">
+					          <if test="startDate != null">
+					              AND <![CDATA[CLUB_DATE >= #{startDate}]]>
+					          </if>
+					          <if test="endDate != null">
+					              AND <![CDATA[CLUB_DATE <= #{endDate}]]>
+					          </if>
+					      </trim> 
+		                  GROUP BY REF_CLUB_NO)
+		<if test='!"".equals(keyword)'>
+			AND (CLUB_TITLE LIKE '%'||#{keyword}||'%' 
+			OR BK_NAME LIKE '%'||#{keyword}||'%')
+		</if>
+		<if test="onoffLines != null &amp;&amp; !onoffLines.isEmpty()">
+			AND ONOFF_LINE IN
+			<foreach item="item" collection="onoffLines" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="categories != null &amp;&amp; !categories.isEmpty()">
+			AND CATEGORY  IN
+			<foreach item="item" collection="categories" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="times != null &amp;&amp;!times.isEmpty()">
+			AND TIMES  IN
+			<foreach item="item" collection="times" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		ORDER BY CLUB_NO
+	</select>
+	
+	<delete id="deleteClubTimes" parameterType="_int">
+		DELETE CLUB_TIME
+		WHERE REF_CLUB_NO = #{clubNo}		
+	</delete>
+	
+	
+</mapper>

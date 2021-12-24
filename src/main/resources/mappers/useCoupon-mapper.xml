@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="UseCouponMapper">
+
+<insert id="insertUsedCouponCode" parameterType="UseCoupon">
+
+	INSERT INTO USECOUPON VALUES(#{user_Id}, #{couponCode})
+
+</insert> 
+
+<select id="checkAlreadyUsedCoupon" resultType="UseCoupon">
+
+	SELECT * FROM USECOUPON
+	WHERE COUPONCODE = #{couponCode}
+	AND USER_ID = #{user_Id} 
+
+</select>
+
+ <select id="selectUseCoupon" resultType="UseCoupon">
+ 
+	 SELECT USER_ID FROM USECOUPON
+	 WHERE COUPONCODE = #{couponCode}
+	 AND USER_ID = #{user_Id}
+	 
+ </select>
+
+</mapper>

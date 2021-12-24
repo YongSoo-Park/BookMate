@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ubookMapper">
+ 	<resultMap id="ubookResultSet" type="Ubook">
+		<id property="ubookNo" column="UBOOK_NO"/>
+		<result property="bSellerNo" column="BSELLER_NO"/>
+		<result property="ubookName" column="UBOOK_NAME"/>
+		<result property="ubookWriter" column="UBOOK_WRITER"/>
+		<result property="ubookIsbn" column="UBOOK_ISBN"/>
+		<result property="ubCategory" column="UB_CATEGORY"/>
+		<result property="ubookTrans" column="UBOOK_TRANS"/>
+		<result property="ubookPub" column="UBOOK_PUB"/>
+		<result property="ubookPubDate" column="UBOOK_PUBDATE"/>		
+		<result property="ubookOPrice" column="UBOOK_O_PRICE"/>		
+		<result property="ubookPrice" column="UBOOK_PRICE"/>		
+		<result property="ubookStock" column="UBOOK_STOCK"/>
+		<result property="ubookQual" column="UBOOK_QUAL"/>		
+		<result property="ubookDetail" column="UBOOK_DETAIL"/>	
+		<result property="ubookContent" column="UBOOK_CONTENT"/>		
+		<result property="ubookImg" column="UBOOK_IMG"/>		
+		<result property="ubookStatus" column="UBOOK_STATUS"/>
+		<result property="sellerNickN" column="SELLER_NICKN"/>
+		<result property="sellerNo" column="SELLER_NO"/>
+		<result property="sellerId" column="SELLER_ID"/>
+		<result property="sellerDel" column="SELLER_DEL"/>
+	</resultMap>
+	
+	<resultMap id="ubookQnaResultSet" type="Ubook_Qna">
+		<id property="qnaNo" column="QNA_NO"/>
+		<result property="ubno" column="UBNO"/>
+		<result property="qnaGroupNo" column="QNA_GROUPNO"/>
+		<result property="qnaGroupNoOrder" column="QNA_GROUPNO_ORDER"/>
+		<result property="qnaWriter" column="QNA_WRITER"/>
+		<result property="qnaContent" column="QNA_CONTENT"/>
+		<result property="createDate" column="CREATE_DATE"/>
+	</resultMap>
+	
+	
+	<select id="selectListCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM UBOOK
+		WHERE UB_CATEGORY = #{ubCategory}
+		AND UBOOK_STATUS = 'Y'
+		AND UBOOK_STOCK != 0
+	</select>
+	
+	<!--상품문의 리스트 -->
+	<select id="selectQnaList" parameterType="_int" resultMap="ubookQnaResultSet">
+		SELECT *
+		FROM UBOOK_QNA
+		WHERE UBNO=#{ubookNo}
+		ORDER BY QNA_NO,QNA_GROUPNO_ORDER DESC
+	</select>
+	
+	<!-- 상품문의 쓰기 / 문의번호+1, 도서번호, 그룹번호+1, 그룹내번호=1, 작성자,내용,시간날짜 -->
+	<insert id="insertQna" parameterType="Ubook_Qna">
+		INSERT INTO UBOOK_QNA
+		VALUES(SEQ_QNANO.NEXTVAL, #{ubno}, (SELECT NVL(MAX(QNA_GROUPNO),0)+ 1 FROM UBOOK_QNA) , 1, #{qnaWriter}, #{qnaContent}, sysdate)
+	</insert>
+
+	<!-- 상품문의 답변쓰기 / 문의번호+1, 도서번호, 그룹번호=답변할 문의의 그룹번호, 그룹내번호+1, 작성자,내용,시간날짜-->
+	<insert id="insertAnswer" parameterType="Ubook_Qna">
+		INSERT INTO UBOOK_QNA
+		VALUES(SEQ_QNANO.NEXTVAL, #{ubno}, #{qnaGroupNo}, (SELECT NVL(MAX(QNA_GROUPNO_ORDER),0) + 1 FROM UBOOK_QNA), #{qnaWriter}, #{qnaContent}, sysdate)
+	</insert>
+	
+	<!-- 상품문의 삭제 -->
+	<delete id="deleteQna" parameterType="_int">
+		DELETE FROM UBOOK_QNA
+		WHERE QNA_NO = #{qnaNo}
+	</delete>
+	<!-- 내가 등록한 도서 리스트 -->
+	<select id="selectbookList" resultMap="ubookResultSet">
+		SELECT DISTINCT *
+		FROM UBOOK
+		WHERE BSELLER_NO = #{bSellerNo}
+		AND UBOOK_STOCK != 0
+	</select>
+	
+	<!-- 판매자의 다른 도서 -->
+	<select id="sellerBookList" resultType="Ubook" resultMap="ubookResultSet">
+		SELECT DISTINCT *
+		FROM UBOOK
+		WHERE BSELLER_NO = #{bSellerNo}
+		AND <![CDATA[ ROWNUM < 6 ]]>
+		AND UBOOK_STATUS = 'Y'
+		AND UBOOK_STOCK != 0 
+		ORDER BY UBOOK_PUBDATE DESC
+	</select>
+	
+	<!-- 중고도서 메인(랜덤 도서) -->
+	<select id="selectRandomBookList" resultMap="ubookResultSet">
+	<![CDATA[
+		SELECT *
+		FROM (SELECT * FROM UBOOK WHERE UBOOK_STOCK != 0 ORDER BY DBMS_RANDOM.VALUE)
+		WHERE ROWNUM < 25
+	]]>
+	</select>
+	
+	<!-- 중고도서 메인(최저가) -->
+	<select id="selectRowPriceBookList" resultMap="ubookResultSet">
+      <![CDATA[
+      SELECT * 
+      FROM(SELECT * FROM UBOOK
+      		WHERE UBOOK_STOCK != 0
+      		ORDER BY UBOOK_PRICE)
+		WHERE ROWNUM < 13
+      ]]>
+	</select>
+	<!-- 등록한 도서 중 문의가 있는 도서 리스트 -->
+	<select id="haveQnaUbook" resultType="Ubook" resultMap="ubookResultSet">
+	SELECT * 
+	FROM UBOOK
+	WHERE UBOOK_NO IN (SELECT UBNO FROM UBOOK_QNA) AND BSELLER_NO=#{bSellerNo}
+	</select>
+	
+	<!-- 중고도서 등록 -->
+	<insert id="insertUbook" parameterType="Ubook">
+		INSERT INTO UBOOK VALUES (SEQ_UBNO.NEXTVAL,#{bSellerNo},#{ubookName},#{ubookWriter},#{ubookIsbn},#{ubCategory}
+								,#{ubookTrans},#{ubookPub},#{ubookPubDate},#{ubookOPrice},#{ubookPrice}
+								,#{ubookStock},#{ubookQual},#{ubookDetail},#{ubookContent},#{ubookImg},DEFAULT)
+	</insert>
+
+	<!-- 도서 상세 -->
+	<select id="selectUbook" parameterType="Ubook" resultMap="ubookResultSet">
+		SELECT U.*, S.SELLER_NICKN, S.SELLER_ID, S.SELLER_DEL
+	      FROM UBOOK U, SELLER S
+	      WHERE UBOOK_NO = #{ubookNo}
+		AND S.SELLER_NO = #{BSellerNo}
+	      AND UBOOK_STATUS = 'Y'
+		
+	</select>
+	
+	<!-- 업데이트할 도서 선택 -->
+	<select id="selectUpdateUbook" parameterType="_int" resultMap="ubookResultSet">
+		 SELECT *
+      FROM UBOOK
+      WHERE UBOOK_NO = #{ubookNo}
+      AND UBOOK_STATUS = 'Y'
+		
+	</select>
+	
+	<!-- 도서 카테고리별 리스트 -->
+	<select id="selectUbookCateList" resultType="Ubook">
+		SELECT * FROM UBOOK UB_CATEGORY = #{ubCategory}
+		WHERE UBOOK_STATUS = 'Y'
+		AND UBOOK_STOCK != 0
+		ORDER BY UBOOK_STOCK DESC
+	</select>
+
+	<!-- 도서 수정 -->
+	<update id="updateUbook" parameterType="Ubook">
+		UPDATE UBOOK
+		SET
+		UBOOK_NAME=#{ubookName},
+		UBOOK_WRITER=#{ubookWriter},
+		UBOOK_ISBN=#{ubookIsbn},
+		UB_CATEGORY=#{ubCategory},
+		UBOOK_TRANS=#{ubookTrans},
+		UBOOK_PUB=#{ubookPub},
+		UBOOK_PUBDATE=#{ubookPubDate},
+		UBOOK_O_PRICE=#{ubookOPrice},
+		UBOOK_PRICE=#{ubookPrice},
+		UBOOK_STOCK=#{ubookStock},
+		UBOOK_QUAL=#{ubookQual},
+		UBOOK_DETAIL=#{ubookDetail},
+		UBOOK_CONTENT=#{ubookContent},
+		UBOOK_IMG=#{ubookImg}
+		WHERE UBOOK_NO=#{ubookNo}
+		AND UBOOK_STATUS='Y'
+	</update>
+
+	<!-- 도서 삭제 -->
+	<delete id="deleteMyUbook" parameterType="_int">
+		DELETE FROM UBOOK
+		WHERE UBOOK_NO=#{ubookNo}
+	</delete>
+	
+	<!-- 도서 목록 -->
+	<select id="ubookCateList1" resultMap="ubookResultSet">
+		SELECT *
+		FROM UBOOK
+		WHERE UBOOK_STATUS = 'Y'
+		AND UB_CATEGORY = #{ubCategory}
+		AND UBOOK_STOCK != 0
+		ORDER BY UBOOK_NO DESC
+	</select>
+		
+	<!--  카테고리 -->
+	<select id="selectCategory" parameterType="_int" resultMap="ubookResultSet">
+		SELECT * FROM UBOOK
+		WHERE UB_CATEGORY=#{ubCategory}
+		AND UBOOK_STATUS = 'Y'
+		AND UBOOK_STOCK != 0
+	</select>
+	
+	<!-- 도서 검색 -->
+	<select id="searchUbook" parameterType="Ubook" resultMap="ubookResultSet">
+		SELECT * 
+		FROM UBOOK
+		<include refid="search"></include>
+		ORDER BY UBOOK_NO DESC
+	</select>
+	<sql id="search">
+		WHERE (UBOOK_NAME LIKE '%'||#{keyword}||'%' 
+		OR UBOOK_WRITER LIKE '%'||#{keyword}||'%')
+		AND UBOOK_STATUS = 'Y'
+		AND UBOOK_STOCK != 0
+	</sql>
+	
+</mapper>

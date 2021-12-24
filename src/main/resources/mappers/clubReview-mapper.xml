@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="clubReviewMapper">
+	
+	<!-- qnaAnswer 테이블 내용 추가하려고 resultMap 생성 -->
+	<resultMap type="ClubQna" id="clubQnaResultSet">
+		<id column="QNANO" property="qnaNo"/>
+		<result column="USERID" property="userId"/>
+		<result column="REFCLUBNO" property="refClubNo"/>
+		<result column="QNATITLE" property="qnaTitle"/>
+		<result column="QNACONTENT" property="qnaContent"/>
+		<result column="QNAANSWER" property="qnaAnswer"/>
+		<result column="CREATEDATE" property="createDate"/>
+		<result column="QNAANSWERNO" property="qnaAnswerNO"/>
+		<result column="QNAANSWERCONTENT" property="qnaAnswerContent"/>
+		<result column="QNAANSWERDATE" property="answerDate"/>
+	</resultMap>
+
+	<!-- 1.리뷰 남기기 전에 참여여부 체크 -->
+	<select id="selectParticipate" parameterType="hashmap" resultType="_int">
+		select count(*)
+		from club_apply
+		where user_id=#{userId}
+		and ref_club_no=#{clubNo}
+		and apply_parti='Y'
+	</select>
+	
+	<select id="selectBefReview" parameterType="hashmap" resultType="_int">
+		select count(*)
+		from clubreview
+		where reviewwriter=#{userId}
+		and refclubno=#{clubNo}
+		and status='Y'
+	</select>
+
+	<insert id="insertReview" parameterType="ClubReview">
+		INSERT INTO CLUBREVIEW(REVIEWNO, REFCLUBNO, REVIEWWRITER, REVIEWRATE, REVIEWCONTENT, REVIEWPHOTO)
+		VALUES(SEQ_CRNO.NEXTVAL, #{refClubNo}, #{reviewWriter}, #{reviewRate}, #{reviewContent}, #{reviewPhoto})
+	</insert>
+	
+	<select id="selectReviewList" resultType="ClubReview">
+		select *
+		from clubreview
+		where refclubno=#{clubNo}
+		and status='Y'
+		order by reviewno desc
+	</select>
+	
+	<!-- 리뷰 삭제 -->
+	<update id="deleteReview" parameterType="hashmap">
+		UPDATE CLUBREVIEW
+		SET STATUS='N'
+		WHERE REVIEWWRITER = #{userId}
+		AND REFCLUBNO = #{clubNo}
+	</update>
+
+	<!-- QNA 등록 -->
+	<insert id="insertQna" parameterType="ClubQna">
+		INSERT INTO CLUBQNA(QNANO, USERID, REFCLUBNO, QNATITLE, QNACONTENT)
+		VALUES(SEQ_CQNO.NEXTVAL, #{userId}, #{refClubNo}, #{qnaTitle}, #{qnaContent})
+	</insert>
+	
+	<!-- 클럽번호에 맞는 qna리스트 조회 -->
+	<select id="selectQnaList" resultType="ClubQna">
+		SELECT *
+		FROM CLUBQNA
+		WHERE REFCLUBNO=#{clubNo}
+		ORDER BY QNANO DESC
+	</select>
+	
+	<!-- qnaNo에 따른 qna, answerQna 조회
+		 left join 해야지만 b테이블 내용없어도 들고올 수 있으므로 잊지말기! -->
+	<select id="selectQna" resultMap="clubQnaResultSet">
+		SELECT A.*, B.QNAANSWERNO, B.QNAANSWERCONTENT, B.QNAANSWERDATE
+		FROM CLUBQNA A
+		LEFT JOIN CLUBQNAANSWER B
+		ON A.QNANO = B.QNANO
+		WHERE A.QNANO = #{qnaNo}
+	</select>
+	
+	<insert id="insertQnaAnswer" parameterType="ClubQnaAnswer">
+		INSERT INTO CLUBQNAANSWER(QNAANSWERNO, USERID, QNANO, QNAANSWERCONTENT)
+		VALUES(SEQ_CQANO.NEXTVAL, #{userId}, #{qnaNo}, #{qnaAnswerContent})
+	</insert>
+	
+	<update id="updateQna" parameterType="_int">
+		UPDATE CLUBQNA
+		SET QNAANSWER = 'Y'
+		WHERE QNANO = #{qnaNo}
+	</update>
+	
+	<delete id="deleteQna" parameterType="_int">
+		DELETE FROM CLUBQNA 
+		WHERE QNANO = #{qnaNo}
+	</delete>
+	
+	<delete id="deleteQnaAnswer" parameterType="_int">
+		DELETE FROM CLUBQNAANSWER 
+		WHERE QNANO = #{qnaNo}
+	</delete>
+	
+	<update id="updateQnaAnswerStatus" parameterType="_int">
+		UPDATE CLUBQNA
+		SET QNAANSWER = 'N'
+		WHERE QNANO = #{qnaNo}
+	</update>
+	
+	<select id="selectReviewList_all" resultType="ClubReview">
+		select REVIEWNO, REFCLUBNO, REVIEWWRITER, REVIEWRATE, REVIEWCONTENT, REVIEWPHOTO, CREATEDATE 
+		from CLUBREVIEW
+		where status='Y'
+		order by CREATEDATE desc
+	</select>
+	
+	
+</mapper>

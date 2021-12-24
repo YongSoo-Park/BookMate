@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="adminMapper">
+
+
+	<resultMap id="clubResultSet" type="Club">
+		<id column="CLUB_NO" property="clubNo" />
+		<result column="CLUB_TITLE" property="clubTitle" />
+		<result column="ONOFF_LINE" property="onoffLine" />
+		<result column="CLUB_CAPACITY" property="clubCapacity" />
+		<result column="CSTART_DATE" property="clubStartDate" />
+		<result column="CEND_DATE" property="clubEndDate" />
+		<result column="CONDITION" property="condition" />
+		<result column="HOST_NAME" property="hostName" />
+		<result column="CHANGE_NAME" property="titleChangeName" />
+	</resultMap>
+
+	<!-- 재고위험 도서 카운트 -->
+	<select id="selectLessStockCount" resultType="_int">
+		SELECT COUNT(*) FROM BOOK WHERE <![CDATA[BOOKSTOCK < #{checkStock}]]>
+	</select>
+
+	<!-- 재고위험 도서 리스트 -->
+	<select id="selectLessStockBook" resultType="Book">
+		SELECT * FROM BOOK WHERE <![CDATA[BOOKSTOCK < #{checkStock}]]>
+		ORDER BY BOOKSTOCK
+	</select>
+
+	<!-- 모든 유저 리스트 카운트 -->
+	<select id="selectAllUserCount" parameterType="hashMap"
+		resultType="_int">
+		SELECT COUNT(*) FROM USERS U LEFT JOIN SELLER S ON U.USER_ID =
+		S.SELLER_ID WHERE U.STATUS = 'Y'
+		<if test="searchKind==1">
+			AND U.USER_ID LIKE #{keyword}
+		</if>
+		<if test="searchKind==2">
+			AND S.SELLER_NICKN LIKE #{keyword}
+		</if>
+	</select>
+
+	<!-- 모든 유저 리스트 -->
+	<select id="selectAllUserList" resultType="AdminUser">
+		SELECT U.USER_ID,U.USER_NAME,U.EMAIL,U.ENROLL,S.STATUS,S.SELLER_NICKN
+		FROM USERS U LEFT JOIN SELLER S ON U.USER_ID = S.SELLER_ID WHERE
+		U.STATUS = 'Y'
+		<if test="searchKind==1">
+			AND U.USER_ID LIKE #{keyword} ORDER BY U.ENROLL
+		</if>
+		<if test="searchKind==2">
+			AND S.SELLER_NICKN LIKE #{keyword} ORDER BY U.ENROLL
+		</if>
+	</select>
+
+	<!-- 정지 유저 리스트 카운트 -->
+	<select id="selectBannedUserCount" parameterType="hashMap"
+		resultType="_int">
+		SELECT COUNT(*) FROM USERS U LEFT JOIN SELLER S ON U.USER_ID =
+		S.SELLER_ID WHERE U.STATUS = 'N'
+		<if test="searchKind==1">
+			AND U.USER_ID LIKE #{keyword}
+		</if>
+		<if test="searchKind==2">
+			AND S.SELLER_NICKN LIKE #{keyword}
+		</if>
+	</select>
+
+	<!-- 정지 유저 리스트  -->
+	<select id="selectBannedUserList" resultType="AdminUser">
+		SELECT U.USER_ID,U.USER_NAME,U.EMAIL,U.ENROLL,S.STATUS,S.SELLER_NICKN
+		FROM USERS U LEFT JOIN SELLER S ON U.USER_ID = S.SELLER_ID WHERE
+		U.STATUS = 'N'
+		<if test="searchKind==1">
+			AND U.USER_ID LIKE #{keyword} ORDER BY U.ENROLL
+		</if>
+		<if test="searchKind==2">
+			AND S.SELLER_NICKN LIKE #{keyword} ORDER BY U.ENROLL
+		</if>
+	</select>
+
+	<!-- 정지 유저 자격 복구 -->
+	<update id="updateUserRestore">
+		UPDATE USERS SET STATUS = 'Y' WHERE USER_ID = #{user_Id}
+	</update>
+
+	<!-- 자격정지 유저 선택  -->
+	<select id="selectBanUser" parameterType="hashMap"
+		resultType="AdminUser">
+		SELECT U.USER_ID,U.USER_NAME,U.EMAIL,U.ENROLL,S.STATUS,S.SELLER_NICKN
+		FROM USERS U LEFT JOIN SELLER S ON U.USER_ID = S.SELLER_ID WHERE
+		U.STATUS = 'Y'
+		<if test="searchKind==1">
+			AND U.USER_ID = #{keyword} ORDER BY U.ENROLL
+		</if>
+		<if test="searchKind==2">
+			AND S.SELLER_NICKN = #{keyword} ORDER BY U.ENROLL
+		</if>
+	</select>
+
+	<!-- 선택 유저 자격 정지  -->
+	<update id="updateUserBan">
+		UPDATE USERS SET STATUS = 'N' WHERE USER_ID = #{user_Id}
+	</update>
+
+	<!-- 독서 모임 신청 리스트 카운트  -->
+	<select id="clubListCount" resultType="_int">
+		SELECT COUNT(*) FROM CLUB C JOIN CLUB_ATTACHMENT CA ON C.CLUB_NO =
+		CA.REF_CLUB_NO
+		WHERE C.CONDITION=2 AND C.STATUS='Y'
+          <![CDATA[AND C.CSTART_DATE <= SYSDATE AND C.CEND_DATE > SYSDATE]]>
+		AND CA.FILE_TYPE=2
+		AND C.CLUB_TITLE LIKE #{keyword}
+	</select>
+
+	<!-- 독서 모임 신청 리스트  -->
+	<select id="selectClubConfirmList" resultMap="clubResultSet">
+		SELECT C.CLUB_NO,C.CLUB_TITLE, C.ONOFF_LINE,C.CLUB_CAPACITY,
+		C.CSTART_DATE,C.CEND_DATE,C.CONDITION,C.HOST_NAME,CA.CHANGE_NAME
+		FROM CLUB C JOIN CLUB_ATTACHMENT CA ON C.CLUB_NO = CA.REF_CLUB_NO
+		WHERE C.CONDITION=2 AND C.STATUS='Y'
+           <![CDATA[AND C.CSTART_DATE <= SYSDATE AND C.CEND_DATE > SYSDATE]]>
+		AND CA.FILE_TYPE=2
+		AND C.CLUB_TITLE LIKE #{keyword}
+		ORDER BY C.CREATE_DATE
+	</select>
+
+	<!-- 독서 모임 승인 반려 업데이트  -->
+	<update id="updateClubConfirm" parameterType="hashMap">
+		UPDATE CLUB SET CONDITION =
+		<if test="confirmStatus==0">
+			3 WHERE CLUB_NO = #{clubNo}
+		</if>
+		<if test="confirmStatus==1">
+			4 WHERE CLUB_NO = #{clubNo}
+		</if>
+	</update>
+	
+</mapper>
+
+

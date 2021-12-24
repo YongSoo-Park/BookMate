@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="basketMapper">
+
+
+	<!-- 장바구니 담기전 이미 장바구니에 있는 도서인지 체크 -->
+	<select id="selectBasket" resultType="ShoppingBasket">
+		SELECT * FROM
+		SHOPPINGBASKET WHERE USER_ID = #{user_Id} AND BOOKISBN =
+		#{bookISBN}
+	</select>
+
+	<!-- 장바구니 담기 -->
+	<insert id="insertBasket" parameterType="ShoppingBasket">
+		INSERT INTO
+		SHOPPINGBASKET
+		VALUES(SHOPPINGBASKET_SEQ.NEXTVAL,#{bookISBN},#{user_Id},#{quantity})
+	</insert>
+
+	<!-- 장바구니 리스트 불러오기 -->
+	<select id="selectCartList" resultType="ShoppingBasket">
+		SELECT * FROM
+		SHOPPINGBASKET WHERE USER_ID = #{user_Id}
+	</select>
+
+	<!-- 장바구니에 있는 도서 리스트 불러오기 -->
+	<select id="selectBookList" parameterType="list"
+		resultType="Book">
+		select B.* from
+		(SELECT * FROM SHOPPINGBASKET WHERE USER_ID
+		= #{list[0].user_Id}) SB JOIN
+		BOOK B ON (SB.BOOKISBN=b.BOOKISBN)
+	</select>
+
+	<!-- 장바구니 아이템 삭제 -->
+	<delete id="deleteBasket">
+		DELETE FROM SHOPPINGBASKET WHERE BASKETNO =
+		#{basketNo}
+	</delete>
+
+</mapper>
+

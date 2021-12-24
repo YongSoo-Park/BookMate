@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="noticeMapper">
+
+	<!--공지사항 리스트 카운트  -->
+	<select id="selectNoticeCount" resultType="_int">
+		SELECT COUNT(*) FROM NOTICE WHERE NOTICETITLE LIKE #{noticeTitle}
+	</select>
+
+	<!--공지사항 리스트   -->
+	<select id="selectNoticeList" resultType="Notice">
+		SELECT * FROM NOTICE WHERE NOTICETITLE LIKE #{noticeTitle} ORDER BY
+		NOTICEDATE DESC
+	</select>
+	
+	<!--공지사항 상세보기 -->
+	<select id="selectNoticeDetail" resultType="Notice">
+		SELECT * FROM NOTICE WHERE NOTICENO = #{noticeNo}
+	</select>
+	
+	<!--공지사항 조회수 업데이트  -->
+	<update id="updateReadCount">
+		UPDATE NOTICE SET NOTICEVIEWS = NOTICEVIEWS + 1 WHERE NOTICENO = #{noticeNo}
+	</update>
+	
+	<!--공지사항 등록  -->
+	<insert id="insertNotice" parameterType="Notice">
+		INSERT INTO NOTICE
+		VALUES(NOTICE_SEQ.NEXTVAL,#{noticeCategory},#{noticeTitle},#{noticeContent},#{noticeWriter},SYSDATE,#{noticeImgStatus},#{noticeImgName},0)
+	</insert>
+	
+	<!--공지사항 수정  -->
+	<update id="updateNotice" parameterType="Notice">
+		UPDATE NOTICE SET NOTICECATEGORY = #{noticeCategory}, NOTICETITLE=
+		#{noticeTitle},NOTICECONTENT=#{noticeContent},NOTICEIMGSTATUS =
+		#{noticeImgStatus},NOTICEIMGNAME = #{noticeImgName} WHERE NOTICENO =
+		#{noticeNo}
+	</update>
+	
+	<!--공지사항 삭제 -->
+	<delete id="deleteNotice">
+		DELETE FROM NOTICE WHERE NOTICENO = #{noticeNo}
+	</delete>
+	
+</mapper>
